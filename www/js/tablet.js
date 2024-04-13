@@ -260,7 +260,7 @@ moveHome = function () {
 }
 
 
-setInterval(checkOnHeartbeat, 500);
+/*setInterval(checkOnHeartbeat, 500);*/
 function checkOnHeartbeat() {
   if (new Date().getTime() - lastHeartBeatTime > 10000) {
     let msgWindow = document.getElementById('messages')
