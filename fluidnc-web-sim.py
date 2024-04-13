@@ -33,7 +33,7 @@
 #  - Running GCode - or anything that involves making FluidNC do any motion things
 # But you can load the UI into your browser and do file downloads and whatnot
 
-proxy = True
+proxy = False
 
 import asyncio
 import os
