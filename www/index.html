@@ -1,63 +1,59 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-capable" content="yes">
-    <title>ESP3D WebUI</title>
-    <script>
-      var target_firmware = "";
-    </script>
-    <script>
-      var web_ui_version = "replaceVERSION";
-    </script>
-    <script>
-      var direct_sd = false;
-    </script>
-    <script>
-      var fw_version = "";
-    </script>
-    <script>
-      var primary_sd = "/ext/";
-    </script>
-    <script>
-      var secondary_sd = "/sd/";
-    </script>
-    <!--removeIf(cleanheader)-->
-    <link href="css/bootstrap.css" rel="stylesheet" />
-    <link href="css/menu.css" rel="stylesheet" />
-    <link href="css/tabs.css" rel="stylesheet" />
-    <link href="css/modaldlg.css" rel="stylesheet" />
-    <link href="css/wizard.css" rel="stylesheet" />
-    <link href="css/tablet.css" rel="stylesheet" />
-    <link href="css/tooltip.css" rel="stylesheet" />
-    <link href="css/loadingOverlay.css" rel="stylesheet" />
 
-    <!--endRemoveIf(cleanheader)-->
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>ESP3D WebUI</title>
+  <script>
+    var target_firmware = "";
+  </script>
+  <script>
+    var web_ui_version = "replaceVERSION";
+  </script>
+  <script>
+    var direct_sd = false;
+  </script>
+  <script>
+    var fw_version = "";
+  </script>
+  <script>
+    var primary_sd = "/ext/";
+  </script>
+  <script>
+    var secondary_sd = "/sd/";
+  </script>
+  <!--removeIf(cleanheader)-->
+  <link href="css/bootstrap.css" rel="stylesheet" />
+  <link href="css/menu.css" rel="stylesheet" />
+  <link href="css/tabs.css" rel="stylesheet" />
+  <link href="css/modaldlg.css" rel="stylesheet" />
+  <link href="css/wizard.css" rel="stylesheet" />
+  <link href="css/tablet.css" rel="stylesheet" />
+  <link href="css/tooltip.css" rel="stylesheet" />
 
-    <!-- smoosh -->
-    <link href="css/style.css" rel="stylesheet" />
-    <!-- endsmoosh -->
-  </head>
-  <body>
-        <file-include w3-include-html="'sub/calibrationtab.html'"></file-include>
-    <!--removeIf(cleanheader)-->
-    <script src="js/util.js"></script>
-    <script src="js/wizard.js"></script>
-    <script src="js/http.js"></script>
-    <script src="js/icons.js"></script>
-    <script src="js/camera.js"></script>
-    <script src="js/settings.js"></script>
-    <script src="js/config.js"></script>
-    <script src="js/controls.js"></script>
-    <script src="js/custom.js"></script>
-    <script src="js/calculatesCalibrationStuff.js"></script>
-    <script src="js/calibrationDraw.js"></script>
-    <!--endRemoveIf(cleanheader)-->
-    <!-- smoosh -->
-    <script src="js/app.js"></script>
-    <!-- endsmoosh -->
-  </body>
+  <!--endRemoveIf(cleanheader)-->
+
+  <!-- smoosh -->
+  <link href="css/style.css" rel="stylesheet" />
+  <!-- endsmoosh -->
+  <script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
+
+</head>
+
+<body>
+  <file-include w3-include-html="'sub/calibrationtab.html'"></file-include>
+  <!--removeIf(cleanheader)-->
+  <script src="js/calculatesCalibrationStuff.js"></script>
+  <script src="js/calibrationDraw.js"></script>
+  <!--endRemoveIf(cleanheader)-->
+  <!-- smoosh -->
+  <script src="js/app.js"></script>
+  <!-- endsmoosh -->
+  <script src="js/grid.js"></script>
+</body>
+
 </html>

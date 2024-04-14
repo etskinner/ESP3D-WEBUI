@@ -18,9 +18,12 @@ function measurementsChanged() {
 }
 
 function updateCalibrationSave(caldata) {
-    SavedMeasurements = caldata;
-    calibrationTableUpdate();
-    document.querySelector('button#compute-sim-button').disabled = false;
+  let id=0;
+  SavedMeasurements = caldata.map(m=>({...m, id: id++}));
+  calibrationTableUpdate();
+  document.querySelector('button#compute-sim-button').disabled = false;
+  // draw one...
+  computeLinesFitness(SavedMeasurements, initialGuess);
 }
 
 function computeSim() {
@@ -69,76 +72,63 @@ function changeStrokeStyle(inputValue) {
  * @param {Object} line4 - An object containing the x and y coordinates of the beginning and end of the fourth line.
  * @returns {void}
  */
-function drawLines(line1, line2, line3, line4, guess) {
+function drawLines(line1, line2, line3, line4, guess, measurement) {
 
-    //Compute the tensions in the upper two belts
-    //const { TL, TR } = calculateTensions(line1.xEnd, line1.yEnd, guess); //This assumes the ends are in the same place which they aren't at first
+  //Compute the tensions in the upper two belts
+  //const { TL, TR } = calculateTensions(line1.xEnd, line1.yEnd, guess); //This assumes the ends are in the same place which they aren't at first
 
-    var canvas = document.getElementById("CursorLayer");
-    var ctx = canvas.getContext("2d");
+  var canvas = document.getElementById("CursorLayer");
+  var ctx = canvas.getContext("2d");
 
-    // Set the stroke color to a lighter grey
-    ctx.strokeStyle = "#999";
+  // Set the stroke color to a lighter grey
+  ctx.strokeStyle = "#999";
 
-    // Draw the four lines
-    ctx.setLineDash([5, 5]);
+  // Draw the four lines
+  ctx.setLineDash([5, 5]);
 
-    //Top left line
-    ctx.beginPath();
-    ctx.moveTo(line1.xBegin / 4, flipY(line1.yBegin / 4));
-    ctx.lineTo(line1.xEnd / 4, flipY(line1.yEnd / 4));
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(line1.xEnd / 4, flipY(line1.yEnd / 4), 2, 0, 2 * Math.PI);
-    ctx.fill();
+  //Top left line
+  ctx.beginPath();
+  ctx.moveTo(line1.xBegin / 4, flipY(line1.yBegin / 4));
+  ctx.lineTo(line1.xEnd / 4, flipY(line1.yEnd / 4));
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(line1.xEnd / 4, flipY(line1.yEnd / 4), 2, 0, 2 * Math.PI);
+  ctx.fill();
 
-    //Top right line
-    ctx.beginPath();
-    ctx.moveTo(line2.xBegin / 4, flipY(line2.yBegin / 4));
-    ctx.lineTo(line2.xEnd / 4, flipY(line2.yEnd / 4));
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(line2.xEnd / 4, flipY(line2.yEnd / 4), 2, 0, 2 * Math.PI);
-    ctx.fill();
+  //Top right line
+  ctx.beginPath();
+  ctx.moveTo(line2.xBegin / 4, flipY(line2.yBegin / 4));
+  ctx.lineTo(line2.xEnd / 4, flipY(line2.yEnd / 4));
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(line2.xEnd / 4, flipY(line2.yEnd / 4), 2, 0, 2 * Math.PI);
+  ctx.fill();
 
-    ctx.beginPath();
-    ctx.moveTo(line3.xBegin / 4, flipY(line3.yBegin / 4));
-    ctx.lineTo(line3.xEnd / 4, flipY(line3.yEnd / 4));
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(line3.xEnd / 4, flipY(line3.yEnd / 4), 2, 0, 2 * Math.PI);
-    ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(line3.xBegin / 4, flipY(line3.yBegin / 4));
+  ctx.lineTo(line3.xEnd / 4, flipY(line3.yEnd / 4));
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(line3.xEnd / 4, flipY(line3.yEnd / 4), 2, 0, 2 * Math.PI);
+  ctx.fill();
 
-    ctx.beginPath();
-    ctx.moveTo(line4.xBegin / 4, flipY(line4.yBegin / 4));
-    ctx.lineTo(line4.xEnd / 4, flipY(line4.yEnd / 4));
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(line4.xEnd / 4, flipY(line4.yEnd / 4), 2, 0, 2 * Math.PI);
-    ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(line4.xBegin / 4, flipY(line4.yBegin / 4));
+  ctx.lineTo(line4.xEnd / 4, flipY(line4.yEnd / 4));
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(line4.xEnd / 4, flipY(line4.yEnd / 4), 2, 0, 2 * Math.PI);
+  ctx.fill();
+  if (measurement.id != undefined) {
+    // update grid
+    gridApi.applyTransaction({
+      update: [{ ...measurement, line1, line2, line3, line4 }],
+    });
+  } else{
+    console.log('no id', measurement);
+  }
 }
 
 function calibrationTableUpdate() {
-  const table = document.querySelector("#caltable");
-  if (table.rows.length) {
-    for (let i=table.rows.length; i>0;i--) {
-      table.deleteRow(0);
-    }
-  }
-  const headr = table.insertRow();
-  headr.insertCell(-1).innerText = "Action";
-  headr.insertCell(-1).innerText = "Top Left";
-  headr.insertCell(-1).innerText = "Top Right";
-  headr.insertCell(-1).innerText = "Bottom Right";
-  headr.insertCell(-1).innerText = "Bottom Left";
-  SavedMeasurements.forEach(
-    m => {
-      const row = table.insertRow();
-      row.insertCell(-1).innerText = "";
-      row.insertCell(-1).innerText = "" + m.tl;
-      row.insertCell(-1).innerText = "" + m.tr;
-      row.insertCell(-1).innerText = "" + m.br;
-      row.insertCell(-1).innerText = "" + m.bl;
-    }
-  )
+  gridApi?.setGridOption('rowData', SavedMeasurements);
 }

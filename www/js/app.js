@@ -77,21 +77,6 @@ function browser_is(bname) {
   return false
 }
 
-window.onload = function () {
-  //to check if javascript is disabled like in anroid preview
-  displayNone('loadingmsg')
-  console.log('Connect to board')
-  connectdlg()
-  //ugly hack for IE
-  console.log(navigator.userAgent)
-  if (browser_is('IE')) {
-    id('control-body').className = 'panel-body'
-    id('command-body').className = 'panel-body'
-    id('file-body').className = 'panel-body panel-height panel-max-height panel-scroll'
-  }
-  tabletInit()
-}
-
 var wsmsg = ''
 
 function startSocket() {

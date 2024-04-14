@@ -211,7 +211,7 @@ function magneticallyAttractedLinesFitness(measurement, individual) {
   measurement.TLtension = TL
   measurement.TRtension = TR
 
-  drawLines(tlLine, trLine, blLine, brLine, individual);
+  drawLines(tlLine, trLine, blLine, brLine, individual, measurement);
 
   return { fitness: finalFitness, lines: { tlLine: tlLine, trLine: trLine, blLine: blLine, brLine: brLine } }
 }
