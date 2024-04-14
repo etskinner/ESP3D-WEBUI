@@ -515,6 +515,7 @@ function findMaxFitness(measurements) {
       // breaks out of loop if set.
       interruptMaxFitness = false;
       window.computing = false;
+      printGuess(messagesBox, bestGuess);
       return;
     }
     clearCalCanvas();
@@ -540,22 +541,7 @@ function findMaxFitness(measurements) {
     if (stagnantCounter < 100 && totalCounter < 200000) {
       requestAnimationFrame(loop);
     } else {
-      if(1/bestGuess.fitness < 0.5){
-        messagesBox.value += '\nWARNING FITNESS TOO LOW. DO NOT USE THESE CALIBRATION VALUES!';
-      }
-
-      messagesBox.value += '\nCalibration complete \nCalibration values:';
-      messagesBox.value += '\nFitness: ' + 1/bestGuess.fitness.toFixed(7);
-      messagesBox.value += '\nMaslow_tlX: ' + bestGuess.tl.x.toFixed(1);
-      messagesBox.value += '\nMaslow_tlY: ' + bestGuess.tl.y.toFixed(1);
-      messagesBox.value += '\nMaslow_trX: ' + bestGuess.tr.x.toFixed(1);
-      messagesBox.value += '\nMaslow_trY: ' + bestGuess.tr.y.toFixed(1);
-      messagesBox.value += '\nMaslow_blX: ' + bestGuess.bl.x.toFixed(1);
-      messagesBox.value += '\nMaslow_blY: ' + bestGuess.bl.y.toFixed(1);
-      messagesBox.value += '\nMaslow_brX: ' + bestGuess.br.x.toFixed(1);
-      messagesBox.value += '\nMaslow_brY: ' + bestGuess.br.y.toFixed(1);
-      messagesBox.scrollTop
-      messagesBox.scrollTop = messagesBox.scrollHeight;
+      printGuess(messagesBox, bestGuess);
 
       if(1/bestGuess.fitness > 0.5){
         sendCommand('$/Maslow_tlX=' + bestGuess.tl.x.toFixed(1));
@@ -600,6 +586,25 @@ function findMaxFitness(measurements) {
 
 //Once we've figured out how good our guess was we try a different guess. We keep the good guesses and throw away the bad guesses
 //using a genetic algorithm
+function printGuess(messagesBox, bestGuess) {
+        if (1 / bestGuess.fitness < 0.5) {
+          messagesBox.value +=
+            "\nWARNING FITNESS TOO LOW. DO NOT USE THESE CALIBRATION VALUES!";
+        }
 
+        messagesBox.value += "\nCalibration complete \nCalibration values:";
+        messagesBox.value += "\nFitness: " + 1 / bestGuess.fitness.toFixed(7);
+        messagesBox.value += "\nMaslow_tlX: " + bestGuess.tl.x.toFixed(1);
+        messagesBox.value += "\nMaslow_tlY: " + bestGuess.tl.y.toFixed(1);
+        messagesBox.value += "\nMaslow_trX: " + bestGuess.tr.x.toFixed(1);
+        messagesBox.value += "\nMaslow_trY: " + bestGuess.tr.y.toFixed(1);
+        messagesBox.value += "\nMaslow_blX: " + bestGuess.bl.x.toFixed(1);
+        messagesBox.value += "\nMaslow_blY: " + bestGuess.bl.y.toFixed(1);
+        messagesBox.value += "\nMaslow_brX: " + bestGuess.br.x.toFixed(1);
+        messagesBox.value += "\nMaslow_brY: " + bestGuess.br.y.toFixed(1);
+        messagesBox.scrollTop;
+        messagesBox.scrollTop = messagesBox.scrollHeight;
+
+}
 
 
