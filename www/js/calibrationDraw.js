@@ -1,3 +1,5 @@
+let BestGuess = {...initialGuess};
+let SavedMeasurements = [];
 /**
  * Functions for drawing on the cal details tab
  */
@@ -23,12 +25,13 @@ function updateCalibrationSave(caldata) {
   calibrationTableUpdate();
   document.querySelector('button#compute-sim-button').disabled = false;
   // draw one...
-  computeLinesFitness(SavedMeasurements, initialGuess);
+  computeLinesFitness(SavedMeasurements, BestGuess);
 }
+
 
 function computeSim() {
   clearCalCanvas();
-  findMaxFitness(SavedMeasurements);
+  BestGuess = findMaxFitness(SavedMeasurements);
   results = document.querySelector("#messages").value
   console.log(results);
 }

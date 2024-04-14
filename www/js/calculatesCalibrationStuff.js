@@ -515,8 +515,8 @@ function findMaxFitness(measurements) {
 
     if (1/currentGuess.fitness > 1/bestGuess.fitness) {
         bestGuess = JSON.parse(JSON.stringify(currentGuess));
-        stagnantCounter = 0;
-    } else {
+        BestGuess = bestGuess; // save BestGuess for visualization.
+        stagnantCounter     } else {
         stagnantCounter++;
     }
     totalCounter++;
@@ -532,7 +532,6 @@ function findMaxFitness(measurements) {
     if (stagnantCounter < 100 && totalCounter < 200000) {
       requestAnimationFrame(loop);
     } else {
-
       if(1/bestGuess.fitness < 0.5){
         messagesBox.value += '\nWARNING FITNESS TOO LOW. DO NOT USE THESE CALIBRATION VALUES!';
       }

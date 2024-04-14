@@ -31,19 +31,15 @@ const agGridOptions = {
   onRowDoubleClicked: (p) => {
     console.log(p);
     if (p.data.line1) {
-      var canvas = document.getElementById("CursorLayer");
-      var ctx = canvas.getContext("2d");
-      highlightLine(p.data.line1, ctx, 3000);
-      highlightLine(p.data.line2, ctx, 3000);
-      highlightLine(p.data.line3, ctx, 3000);
-      highlightLine(p.data.line4, ctx, 3000);
     }
   },
   onGridReady: (params) => {
     gridApi = params.api;
     console.log("my grid is ready", params);
+    highlightLines();
   },
   getRowId: (params) => params.data.id,
+  rowSelection: 'multiple'
 };
 
 const myGridElement = document.querySelector("#caltable");
@@ -51,15 +47,47 @@ agGrid.createGrid(myGridElement, agGridOptions);
 // Use this to update/ interact.
 let gridApi = null;
 
-function highlightLine(line, ctx, time) {
+// grid animation is running:
+let gridAnimation = false;
+
+const highlightTiming = 500;
+
+function highlightLines() {
+  if (gridAnimation) {
+    return;
+  }
+  gridAnimation = true;
+  function lineAnimationLoop() {
+    if (gridApi?.getSelectedRows()) {
+      var canvas = document.getElementById("CursorLayer");
+      var ctx = canvas.getContext("2d");
+      gridApi.getSelectedRows().forEach((row) => {
+        if (row.line1) {
+          highlightLine(row.line1, ctx);
+          highlightLine(row.line2, ctx);
+          highlightLine(row.line3, ctx);
+          highlightLine(row.line4, ctx);
+        }
+      });
+    }
+    // reset in a sec
+    setTimeout(() => {
+      // redraw
+      clearCalCanvas();
+      computeLinesFitness(SavedMeasurements, BestGuess); // redraw
+      // call me back in a second
+      setTimeout(() => requestAnimationFrame(lineAnimationLoop), highlightTiming/2);
+    }, highlightTiming);
+  }
+  lineAnimationLoop();
+}
+
+function highlightLine(line, ctx) {
   ctx.fillStyle = "red";
   ctx.strokeStyle = "red";
   doDrawLine(line, ctx);
   ctx.fillStyle = "black";
   ctx.strokeStyle = "#999";
-  setTimeout(() => {
-    doDrawLine(line, ctx);
-  }, time);
 }
 
 function doDrawLine(line, ctx) {
