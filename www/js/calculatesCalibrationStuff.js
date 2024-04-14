@@ -515,8 +515,9 @@ function findMaxFitness(measurements) {
 
     if (1/currentGuess.fitness > 1/bestGuess.fitness) {
         bestGuess = JSON.parse(JSON.stringify(currentGuess));
-        BestGuess = bestGuess; // save BestGuess for visualization.
-        stagnantCounter     } else {
+        BestGuess = bestGuess;
+        stagnantCounter = 0;
+    } else {
         stagnantCounter++;
     }
     totalCounter++;
