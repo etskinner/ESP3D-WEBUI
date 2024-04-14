@@ -491,6 +491,8 @@ function scaleMeasurementsBasedOnTension(measurements, guess) {
   return newMeasurements
 }
 
+// breaks out of loop if set.
+let interruptMaxFitness = false;
 function findMaxFitness(measurements) {
   // reject if already running
   if (window.computing) {
@@ -499,7 +501,6 @@ function findMaxFitness(measurements) {
   }
   // turn off compute button
   window.computing = true;
-  document.querySelector('button#compute-sim-button').disabled = true;
 
   let currentGuess = JSON.parse(JSON.stringify(initialGuess));
   let stagnantCounter = 0;
@@ -510,6 +511,12 @@ function findMaxFitness(measurements) {
   const fitnessMessage = document.getElementById('fitnessMessage');
 
   function loop() {
+    if (interruptMaxFitness) {
+      // breaks out of loop if set.
+      interruptMaxFitness = false;
+      window.computing = false;
+      return;
+    }
     clearCalCanvas();
     currentGuess = computeLinesFitness(measurements, currentGuess);
 
@@ -574,8 +581,8 @@ function findMaxFitness(measurements) {
       }
 
       // allow compute button to be pressed again
-      window.computing = false;
-      document.querySelector('button#compute-sim-button').disabled = false;
+      windowcomputing = false;
+      resetButtonsDisabled(false);
     }
   }
 

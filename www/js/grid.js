@@ -39,7 +39,7 @@ const agGridOptions = {
     highlightLines();
   },
   getRowId: (params) => params.data.id,
-  rowSelection: 'multiple'
+  rowSelection: "multiple",
 };
 
 const myGridElement = document.querySelector("#caltable");
@@ -76,7 +76,10 @@ function highlightLines() {
       clearCalCanvas();
       computeLinesFitness(SavedMeasurements, BestGuess); // redraw
       // call me back in a second
-      setTimeout(() => requestAnimationFrame(lineAnimationLoop), highlightTiming/2);
+      setTimeout(
+        () => requestAnimationFrame(lineAnimationLoop),
+        highlightTiming / 2
+      );
     }, highlightTiming);
   }
   lineAnimationLoop();
@@ -99,4 +102,29 @@ function doDrawLine(line, ctx) {
   ctx.beginPath();
   ctx.arc(line.xEnd / 4, flipY(line.yEnd / 4), 2, 0, 2 * Math.PI);
   ctx.fill();
+}
+
+function runSimWithoutSelected() {
+  // make an array with just the unselected rows
+  const unselectedRows =
+    gridApi.getSelectedRows().length > 0
+      ? SavedMeasurements.filter(
+          (row) => !gridApi.getSelectedRows().map(r=>r.id).includes(row.id)
+        )
+      : SavedMeasurements;
+  computeSim(unselectedRows);
+}
+
+function runSimWithSelected() {
+  // make an array with just the selected rows
+  const selectedRows = gridApi.getSelectedRows();
+  computeSim(selectedRows);
+}
+
+function resetButtonsDisabled(state) {
+  document.querySelectorAll('button.compute-sim-button').forEach(
+    node => {
+      node.disabled = state;
+    }
+  )
 }

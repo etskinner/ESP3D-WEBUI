@@ -23,15 +23,16 @@ function updateCalibrationSave(caldata) {
   let id=0;
   SavedMeasurements = caldata.map(m=>({...m, id: id++}));
   calibrationTableUpdate();
-  document.querySelector('button#compute-sim-button').disabled = false;
+  resetButtonsDisabled(false);
   // draw one...
   computeLinesFitness(SavedMeasurements, BestGuess);
 }
 
 
-function computeSim() {
+function computeSim(measurements = null) {
+  resetButtonsDisabled(true);
   clearCalCanvas();
-  BestGuess = findMaxFitness(SavedMeasurements);
+  BestGuess = findMaxFitness(measurements || SavedMeasurements);
   results = document.querySelector("#messages").value
   console.log(results);
 }
