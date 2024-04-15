@@ -2,3 +2,4 @@ node_modules
 dist
 src
 index.html.gz
+.DS_Store

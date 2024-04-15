@@ -758,11 +758,8 @@ textarea {
 
 .caltable {
   width: 100%;
-  font-size: 10pt;
-}
-
-.caltable table {
-  font-size: 10px;
+  font-size: x-small !important;
+  height: 600px;
 }
 
 .caltable textarea {

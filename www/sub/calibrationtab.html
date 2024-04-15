@@ -1,6 +1,6 @@
 <div id="calibrationtab" class="tabcontent calibrationtab"></div>
   <h1>Maslow 4 Standalone Calibration Simulator</h1>
-  <p><b>Warning: Unofficial and Experimental!</b> This uses the calibration algorithm from firmware version 0.68. 
+  <p><b>Warning: Unofficial and Experimental!</b> This uses the calibration algorithm from firmware version 0.68.
     To use this tab to plot calibration data, copy and paste the line that starts with "CLBM:" in the serial messages, paste it here, and click "Compute".</p>
   <b>CLBM Input:</b>
   <textarea id="caldata" onchange="measurementsChanged()"></textarea>
@@ -14,13 +14,19 @@
       <div><b>Calibration visualization:</b>
         <canvas id="CursorLayer" width="1000" height="600"
           style="width: 1000px;height: 600px; border: 1px solid;padding: 2px;"></canvas></div>
-      <div style="width: 100%;height: 600px; overflow: auto;padding-left: 10px;">
+      <div style="width: 100%;height: 620px; overflow: auto">
         <b>Calibration table:</b>
-        <table id="caltable" class="caltable"> </table>
+        <div id="gridButtonBar" style="display: flex; flex-direction: row;" >
+          <button class="btn btn-default compute-sim-button" onclick="runSimWithoutSelected()">Run without selected</button>
+          <button class="btn btn-default compute-sim-button" onclick="runSimWithSelected()">Run with only selected</button>
+          <button class="btn btn-default compute-sim-button" onclick="computeSim()">Run with all</button>
+          <button class="btn btn-warning" onclick="interruptMaxFitness=true;resetButtonsDisabled(false);">Stop</button>
+        </div>
+        <div id="caltable" class="ag-theme-alpine caltable" ></div>
       </div>
     </div>
     <div id="caltable-container">
-    
+
   </div>
   <div>
     <b>Calibration log:</b>
