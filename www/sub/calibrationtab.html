@@ -4,7 +4,8 @@
     To use this tab to plot calibration data, copy and paste the line that starts with "CLBM:" in the serial messages, paste it here, and click "Compute".</p>
   <b>CLBM Input:</b>
   <textarea id="caldata" onchange="measurementsChanged()"></textarea>
-  <div id="calcontrols" style="height: 60px">
+  <div id="calcontrols" style="height: 100px">
+    <button id="compute-sim-button" class="btn btn-primary" onclick="computeSim()" disabled>Compute</button>
     <span id="fitnessMessage" class="calfitnesstext">Fitness: </span>
   </div>
   </div>

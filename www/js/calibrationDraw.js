@@ -22,6 +22,7 @@ function measurementsChanged() {
 function updateCalibrationSave(caldata) {
   let id=0;
   SavedMeasurements = caldata.map(m=>({...m, id: id++}));
+  document.querySelector('button#compute-sim-button').disabled = false;
   calibrationTableUpdate();
   resetButtonsDisabled(false);
   // draw one...
