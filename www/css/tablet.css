@@ -759,7 +759,7 @@ textarea {
 .caltable {
   width: 100%;
   font-size: x-small !important;
-  height: 600px;
+  height: 530px;
 }
 
 .caltable textarea {
@@ -908,4 +908,8 @@ textarea {
 .input-label {
   text-align: left;
   float: left;
+}
+
+.pad-left {
+  margin-left: 20px;
 }

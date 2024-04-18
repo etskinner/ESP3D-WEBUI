@@ -1,18 +1,13 @@
-//This is the inital guess for how big the machine is. These numbers are wrong intensionally
-const initialWidth = 3048 + 12
-const initialHeight = 2200 - 14
+
 
 //Establish initial guesses for the corners
 var initialGuess = {
-  tl: { x: 0, y: initialHeight },
-  tr: { x: initialWidth, y: initialHeight },
+  tl: { x: 0, y: 2000 },
+  tr: { x: 3000, y: 2000 },
   bl: { x: 0, y: 0 },
-  br: { x: initialWidth, y: 0 },
+  br: { x: 3000, y: 0 },
   fitness: 100000000,
 }
-
-const centerX = initialWidth / 2
-const centerY = initialHeight / 2
 
 let result
 
@@ -20,7 +15,7 @@ let result
  *
  *   If you are reading this code to understand it then I would recommend starting
  *  at the bottom of the page and working your way up. The code is written in a
- * functional style so the function definitions are at the top and the code that
+ * functional st‰yle so the function definitions are at the top and the code that
  * actually runs is at the bottom. It was also written quickly and modified a lot
  * so it is not very clean. I apologize for that.
  *
@@ -491,14 +486,19 @@ function scaleMeasurementsBasedOnTension(measurements, guess) {
   return newMeasurements
 }
 
-// breaks out of loop if set.
-let interruptMaxFitness = false;
 function findMaxFitness(measurements) {
   // reject if already running
   if (window.computing) {
     console.log('Computation in progress, ignoring request');
     return;
   }
+  document.getElementById("caltable").dispatchEvent(new CustomEvent(CALIBRATION_EVENT, {
+    bubbles: true,
+    cancelable: true,
+    detail: {
+      started: true,
+    }
+  }));
   // turn off compute button
   window.computing = true;
 
@@ -507,73 +507,93 @@ function findMaxFitness(measurements) {
   let totalCounter = 0;
   var bestGuess = JSON.parse(JSON.stringify(initialGuess));
 
-  var messagesBox = document.querySelector('#messages');
-  const fitnessMessage = document.getElementById('fitnessMessage');
+  var messagesBox = document.querySelector("#messages");
+  const fitnessMessage = document.getElementById("fitnessMessage");
 
-  function loop() {
-    if (interruptMaxFitness) {
-      // breaks out of loop if set.
-      interruptMaxFitness = false;
-      window.computing = false;
+  function iterate() {
+    if (!window.computing) {
       printGuess(messagesBox, bestGuess);
       return;
     }
-    clearCalCanvas();
-    currentGuess = computeLinesFitness(measurements, currentGuess);
+    if (stagnantCounter < 300 && totalCounter < 200000) {
+      //Clear the canvass
+      clearCalCanvas();
 
-    if (1/currentGuess.fitness > 1/bestGuess.fitness) {
-        bestGuess = JSON.parse(JSON.stringify(currentGuess));
-        BestGuess = bestGuess;
-        stagnantCounter = 0;
+      currentGuess = computeLinesFitness(measurements, currentGuess);
+
+      document.getElementById("caltable").dispatchEvent(new CustomEvent(CALIBRATION_EVENT, {
+        bubbles: true,
+        cancelable: true,
+        detail: {
+          progress: true,
+          currentGuess: currentGuess
+        }
+      }));
+
+      if (1/currentGuess.fitness > 1/bestGuess.fitness) {
+          bestGuess = JSON.parse(JSON.stringify(currentGuess));
+          BestGuess = bestGuess;
+          stagnantCounter = 0;
+      } else {
+          stagnantCounter++;
+      }
+      totalCounter++;
+      //console.log("Total Counter: " + totalCounter);
+
+      if(totalCounter % 100 == 0) {
+        const fitnessStatus = `Fitness: ${1 / bestGuess.fitness.toFixed(7)} in ${totalCounter}`;
+        fitnessMessage.innerText = fitnessStatus;
+        messagesBox.value += '\n' + fitnessStatus;
+        messagesBox.scrollTop;
+        messagesBox.scrollTop = messagesBox.scrollHeight;
+      }
+
+      // Schedule the next iteration
+      setTimeout(iterate, 0);
     } else {
-        stagnantCounter++;
-    }
-    totalCounter++;
+      document.getElementById("caltable").dispatchEvent(new CustomEvent(CALIBRATION_EVENT, {
+        bubbles: true,
+        cancelable: true,
+        detail: {
+          complete: true,
+          bestGuess: bestGuess
+        }
+      }));
 
-    if(totalCounter % 100 == 0) {
-      const fitnessStatus = `Fitness: ${1 / bestGuess.fitness.toFixed(7)} in ${totalCounter}`;
-      fitnessMessage.innerText = fitnessStatus;
-      messagesBox.value += '\n' + fitnessStatus;
-      messagesBox.scrollTop;
-      messagesBox.scrollTop = messagesBox.scrollHeight;
-    }
-
-    if (stagnantCounter < 100 && totalCounter < 200000) {
-      requestAnimationFrame(loop);
-    } else {
+      // allow compute button to be pressed again
+      window.computing = false;
+      resetButtonsDisabled(false);
       printGuess(messagesBox, bestGuess);
 
-      if(1/bestGuess.fitness > 0.5){
-        sendCommand('$/Maslow_tlX=' + bestGuess.tl.x.toFixed(1));
-        sendCommand('$/Maslow_tlY=' + bestGuess.tl.y.toFixed(1));
-        sendCommand('$/Maslow_trX=' + bestGuess.tr.x.toFixed(1));
-        sendCommand('$/Maslow_trY=' + bestGuess.tr.y.toFixed(1));
-        sendCommand('$/Maslow_blX=' + bestGuess.bl.x.toFixed(1));
-        sendCommand('$/Maslow_blY=' + bestGuess.bl.y.toFixed(1));
-        sendCommand('$/Maslow_brX=' + bestGuess.br.x.toFixed(1));
-        sendCommand('$/Maslow_brY=' + bestGuess.br.y.toFixed(1));
+      if (1 / bestGuess.fitness > 0.5) {
+        sendCommand("$/Maslow_tlX=" + bestGuess.tl.x.toFixed(1));
+        sendCommand("$/Maslow_tlY=" + bestGuess.tl.y.toFixed(1));
+        sendCommand("$/Maslow_trX=" + bestGuess.tr.x.toFixed(1));
+        sendCommand("$/Maslow_trY=" + bestGuess.tr.y.toFixed(1));
+        sendCommand("$/Maslow_blX=" + bestGuess.bl.x.toFixed(1));
+        sendCommand("$/Maslow_blY=" + bestGuess.bl.y.toFixed(1));
+        sendCommand("$/Maslow_brX=" + bestGuess.br.x.toFixed(1));
+        sendCommand("$/Maslow_brY=" + bestGuess.br.y.toFixed(1));
         refreshSettings(current_setting_filter);
         saveMaslowYaml();
 
-        messagesBox.value += '\nThese values have been automatically saved for you.';
-        messagesBox.value += "\nYou MUST restart your machine for them to take effect...I know that is annoying, it's getting fixed ASAP. ";
-        messagesBox.scrollTop
+        messagesBox.value +=
+          "\nThese values have been automatically saved for you.";
+        messagesBox.value +=
+          "\nYou MUST restart your machine for them to take effect...I know that is annoying, it's getting fixed ASAP. ";
+        messagesBox.scrollTop;
         messagesBox.scrollTop = messagesBox.scrollHeight;
 
-        //This restarts the esp32 to prevent you from trying to move the machine after calibration
-        setTimeout(function() {
-          sendCommand('$System/Control=RESTART');
+        // This restarts the esp32 to prevent you from trying to move the machine after calibration
+        setTimeout(function () {
+          sendCommand("$System/Control=RESTART");
         }, 2000);
       }
-
-      // allow compute button to be pressed again
-      windowcomputing = false;
-      resetButtonsDisabled(false);
     }
   }
 
-  loop();
-  return bestGuess;
+  // Start the iteration
+  iterate();
 }
 
 
@@ -606,5 +626,23 @@ function printGuess(messagesBox, bestGuess) {
         messagesBox.scrollTop = messagesBox.scrollHeight;
 
 }
+
+const CALIBRATION_EVENT = 'calibration';
+
+const CAL_STARTED_EVENT = new CustomEvent(CALIBRATION_EVENT,
+{bubbles: true, cancelable: true, detail: {
+  complete: true
+}});
+
+const CAL_DONE_EVENT = new CustomEvent(CALIBRATION_EVENT,
+{bubbles: true, cancelable: true, detail: {
+  started: true
+}});
+
+const CAL_PROGRESS_EVENT = new CustomEvent(CALIBRATION_EVENT,
+{bubbles: true, cancelable: true, detail: {
+  iteration: 0,
+  bestGuess: {}
+}});
 
 

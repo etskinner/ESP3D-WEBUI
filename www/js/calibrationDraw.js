@@ -1,4 +1,4 @@
-let BestGuess = {...initialGuess};
+let BestGuess = { ...initialGuess };
 let SavedMeasurements = [];
 /**
  * Functions for drawing on the cal details tab
@@ -6,10 +6,11 @@ let SavedMeasurements = [];
 
 function measurementsChanged() {
   try {
+    loadInitialData();
     const calTextElement = document.getElementById("caldata");
     let textValue = `${calTextElement.value}`;
-    textValue = textValue.replace('CLBM:','');
-    if (textValue.indexOf('bl:')>0) {
+    textValue = textValue.replace("CLBM:", "");
+    if (textValue.indexOf("bl:") > 0) {
       textValue = JSON.stringify(eval(textValue));
     }
     let caldata = JSON.parse(textValue);
@@ -19,29 +20,66 @@ function measurementsChanged() {
   }
 }
 
+function initialDataChanged() {
+  initialGuess.tl.x = parseFloat(document.getElementById("tlx").value);
+  initialGuess.tl.y = parseFloat(document.getElementById("tly").value);
+  initialGuess.tr.x = parseFloat(document.getElementById("trx").value);
+  initialGuess.tr.y = parseFloat(document.getElementById("try").value);
+  initialGuess.br.x = parseFloat(document.getElementById("brx").value);
+}
+
+function loadInitialData() {
+  document.getElementById("tlx").value = initialGuess.tl.x;
+  document.getElementById("tly").value = initialGuess.tl.y;
+  document.getElementById("trx").value = initialGuess.tr.x;
+  document.getElementById("try").value = initialGuess.tr.y;
+  document.getElementById("brx").value = initialGuess.br.x;
+}
+
 function updateCalibrationSave(caldata) {
-  let id=0;
-  SavedMeasurements = caldata.map(m=>({...m, id: id++}));
-  document.querySelector('button#compute-sim-button').disabled = false;
+  let id = 0;
+  SavedMeasurements = caldata.map((m) => ({ ...m, id: id++ }));
   calibrationTableUpdate();
   resetButtonsDisabled(false);
   // draw one...
   computeLinesFitness(SavedMeasurements, BestGuess);
 }
 
+  const calibrationCallback = (e) => {
+    if (e.detail.started) {
+      // todo: anything?
+    } else if (e.detail.progress) {
+      // update fields.
+       document.getElementById("tlx").value = e.detail.currentGuess.tl.x;
+       document.getElementById("tly").value = e.detail.currentGuess.tl.y;
+       document.getElementById("trx").value = e.detail.currentGuess.tr.x;
+       document.getElementById("try").value = e.detail.currentGuess.tr.y;
+       document.getElementById("brx").value = e.detail.currentGuess.br.x;
+    } else if (e.detail.complete) {
+      initialDataChanged();
+      // update initial stuff.
+      initialGuess = {...BestGuess};
+      loadInitialData();
+    }
+    console.log(e.detail);
+  };
 
 function computeSim(measurements = null) {
+
+  document.getElementById("caltable").removeEventListener(CALIBRATION_EVENT, calibrationCallback);
+  document.getElementById("caltable").addEventListener(CALIBRATION_EVENT, calibrationCallback)
+
   resetButtonsDisabled(true);
   clearCalCanvas();
-  BestGuess = findMaxFitness(measurements || SavedMeasurements);
-  results = document.querySelector("#messages").value
+  findMaxFitness(measurements || SavedMeasurements);
+  results = document.querySelector("#messages").value;
   console.log(results);
 }
 
 //Deletes everything from the canvas
 function clearCalCanvas() {
-  const canvas = document.getElementById('CursorLayer');
-  const context = canvas.getContext('2d');
+  const canvas = document.getElementById("CursorLayer");
+  const context = canvas.getContext("2d");
   context.clearRect(0, 0, canvas.width, canvas.height);
 }
 
@@ -59,9 +97,13 @@ function changeStrokeStyle(inputValue) {
   const green = [0, 128, 0]; // RGB values for green
   const red = [255, 0, 0]; // RGB values for red
   const range = 60 - 20; // Range of input values
-  const increment = (red.map((value, index) => value - green[index])).map(value => value / range); // Increment for each RGB value
+  const increment = red
+    .map((value, index) => value - green[index])
+    .map((value) => value / range); // Increment for each RGB value
 
-  const color = green.map((value, index) => Math.round(value + increment[index] * (inputValue - 20))); // Calculate the color based on the input value
+  const color = green.map((value, index) =>
+    Math.round(value + increment[index] * (inputValue - 20))
+  ); // Calculate the color based on the input value
 
   const canvas = document.getElementById("CursorLayer");
   const ctx = canvas.getContext("2d");
@@ -78,7 +120,6 @@ function changeStrokeStyle(inputValue) {
  * @returns {void}
  */
 function drawLines(line1, line2, line3, line4, guess, measurement) {
-
   //Compute the tensions in the upper two belts
   //const { TL, TR } = calculateTensions(line1.xEnd, line1.yEnd, guess); //This assumes the ends are in the same place which they aren't at first
 
@@ -129,11 +170,16 @@ function drawLines(line1, line2, line3, line4, guess, measurement) {
     gridApi.applyTransaction({
       update: [{ ...measurement, line1, line2, line3, line4 }],
     });
-  } else{
-    console.log('no id', measurement);
+  } else {
+    console.log("no id", measurement);
   }
 }
 
 function calibrationTableUpdate() {
-  gridApi?.setGridOption('rowData', SavedMeasurements);
+  gridApi?.setGridOption("rowData", SavedMeasurements);
+}
+
+function stopCalculations() {
+  resetButtonsDisabled(false);
+  window.computing = false;
 }
