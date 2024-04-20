@@ -26,6 +26,7 @@ function initialDataChanged() {
   initialGuess.tr.x = parseFloat(document.getElementById("trx").value);
   initialGuess.tr.y = parseFloat(document.getElementById("try").value);
   initialGuess.br.x = parseFloat(document.getElementById("brx").value);
+  BestGuess = initialGuess;
 }
 
 function loadInitialData() {
@@ -56,18 +57,15 @@ function updateCalibrationSave(caldata) {
        document.getElementById("try").value = e.detail.currentGuess.tr.y;
        document.getElementById("brx").value = e.detail.currentGuess.br.x;
     } else if (e.detail.complete) {
-      initialDataChanged();
       // update initial stuff.
       initialGuess = {...BestGuess};
+      initialDataChanged();
       loadInitialData();
     }
     console.log(e.detail);
   };
 
 function computeSim(measurements = null) {
-
-  document.getElementById("caltable").removeEventListener(CALIBRATION_EVENT, calibrationCallback);
-  document.getElementById("caltable").addEventListener(CALIBRATION_EVENT, calibrationCallback)
 
   resetButtonsDisabled(true);
   clearCalCanvas();
@@ -182,4 +180,81 @@ function calibrationTableUpdate() {
 function stopCalculations() {
   resetButtonsDisabled(false);
   window.computing = false;
+}
+
+/* Functions to hook into calibration events */
+function printGuess(messagesBox, bestGuess) {
+        if (1 / bestGuess.fitness < 0.5) {
+          messagesBox.value +=
+            "\nWARNING FITNESS TOO LOW. DO NOT USE THESE CALIBRATION VALUES!";
+        }
+
+        messagesBox.value += "\nCalibration complete \nCalibration values:";
+        messagesBox.value += "\nFitness: " + 1 / bestGuess.fitness.toFixed(7);
+        messagesBox.value += "\nMaslow_tlX: " + bestGuess.tl.x.toFixed(1);
+        messagesBox.value += "\nMaslow_tlY: " + bestGuess.tl.y.toFixed(1);
+        messagesBox.value += "\nMaslow_trX: " + bestGuess.tr.x.toFixed(1);
+        messagesBox.value += "\nMaslow_trY: " + bestGuess.tr.y.toFixed(1);
+        messagesBox.value += "\nMaslow_blX: " + bestGuess.bl.x.toFixed(1);
+        messagesBox.value += "\nMaslow_blY: " + bestGuess.bl.y.toFixed(1);
+        messagesBox.value += "\nMaslow_brX: " + bestGuess.br.x.toFixed(1);
+        messagesBox.value += "\nMaslow_brY: " + bestGuess.br.y.toFixed(1);
+        messagesBox.scrollTop;
+        messagesBox.scrollTop = messagesBox.scrollHeight;
+
+}
+
+const messagesBox = document.getElementById("messages");
+const fitnessMessage = document.getElementById("fitnessMessage");
+
+/**
+ * This Listener will hook in the drawEvents, etc to the calibration as it runs
+ * @param the custom calibration event
+ */
+function calibrationEventListener(event) {
+  if (event.detail) {
+    if (event.detail.initialGuess) {
+      // start of calibration here.
+      resetButtonsDisabled(true);
+      clearCalCanvas();
+    } else if (event.detail.final) {
+      resetButtonsDisabled(false);
+      printGuess(messagesBox, BestGuess);
+      // end of calibration.
+      if (event.detail.good) {
+        // "good" calibration
+      } else {
+        // "bad" calibration
+      }
+    } else if (event.detail.final === false) {
+      // progress event.
+      const bestGuess = event.detail.bestGuess;
+      const totalCounter = event.detail.bestGuess;
+      if (totalCounter % 100 == 0) {
+        const fitnessStatus = `Fitness: ${1 / bestGuess.fitness.toFixed(7)} in ${totalCounter}`;
+        fitnessMessage.innerText = fitnessStatus;
+        messagesBox.value += '\n' + fitnessStatus;
+        messagesBox.scrollTop;
+        messagesBox.scrollTop = messagesBox.scrollHeight;
+      }
+      BestGuess = bestGuess;
+    } else if (event.detail.walkedLines) {
+      // walkLines result
+    } else if (event.detail.lines) {
+      // drawLines here!
+      const lines = event.detail.lines.lines;
+      const individual = event.detail.individual;
+      const measurement = event.detail.measurement;
+      drawLines(lines.tlLine, lines.trLine, lines.blLine, lines.brLine, individual, measurement);
+    }
+  }
+}
+
+document.body.removeEventListener(CALIBRATION_EVENT_NAME, calibrationEventListener)
+document.body.addEventListener(CALIBRATION_EVENT_NAME, calibrationEventListener)
+
+// functions removed from this project
+
+function clearCanvas() {
+  clearCalCanvas();
 }
