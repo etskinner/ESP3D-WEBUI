@@ -46,27 +46,26 @@ function updateCalibrationSave(caldata) {
   computeLinesFitness(SavedMeasurements, BestGuess);
 }
 
-  const calibrationCallback = (e) => {
-    if (e.detail.started) {
-      // todo: anything?
-    } else if (e.detail.progress) {
-      // update fields.
-       document.getElementById("tlx").value = e.detail.currentGuess.tl.x;
-       document.getElementById("tly").value = e.detail.currentGuess.tl.y;
-       document.getElementById("trx").value = e.detail.currentGuess.tr.x;
-       document.getElementById("try").value = e.detail.currentGuess.tr.y;
-       document.getElementById("brx").value = e.detail.currentGuess.br.x;
-    } else if (e.detail.complete) {
-      // update initial stuff.
-      initialGuess = {...BestGuess};
-      initialDataChanged();
-      loadInitialData();
-    }
-    console.log(e.detail);
-  };
+const calibrationCallback = (e) => {
+  if (e.detail.started) {
+    // todo: anything?
+  } else if (e.detail.progress) {
+    // update fields.
+    document.getElementById("tlx").value = e.detail.currentGuess.tl.x;
+    document.getElementById("tly").value = e.detail.currentGuess.tl.y;
+    document.getElementById("trx").value = e.detail.currentGuess.tr.x;
+    document.getElementById("try").value = e.detail.currentGuess.tr.y;
+    document.getElementById("brx").value = e.detail.currentGuess.br.x;
+  } else if (e.detail.complete) {
+    // update initial stuff.
+    initialGuess = { ...BestGuess };
+    initialDataChanged();
+    loadInitialData();
+  }
+  console.log(e.detail);
+};
 
 function computeSim(measurements = null) {
-
   resetButtonsDisabled(true);
   clearCalCanvas();
   findMaxFitness(measurements || SavedMeasurements);
@@ -184,24 +183,23 @@ function stopCalculations() {
 
 /* Functions to hook into calibration events */
 function printGuess(messagesBox, bestGuess) {
-        if (1 / bestGuess.fitness < 0.5) {
-          messagesBox.value +=
-            "\nWARNING FITNESS TOO LOW. DO NOT USE THESE CALIBRATION VALUES!";
-        }
+  if (1 / bestGuess.fitness < 0.5) {
+    messagesBox.value +=
+      "\nWARNING FITNESS TOO LOW. DO NOT USE THESE CALIBRATION VALUES!";
+  }
 
-        messagesBox.value += "\nCalibration complete \nCalibration values:";
-        messagesBox.value += "\nFitness: " + 1 / bestGuess.fitness.toFixed(7);
-        messagesBox.value += "\nMaslow_tlX: " + bestGuess.tl.x.toFixed(1);
-        messagesBox.value += "\nMaslow_tlY: " + bestGuess.tl.y.toFixed(1);
-        messagesBox.value += "\nMaslow_trX: " + bestGuess.tr.x.toFixed(1);
-        messagesBox.value += "\nMaslow_trY: " + bestGuess.tr.y.toFixed(1);
-        messagesBox.value += "\nMaslow_blX: " + bestGuess.bl.x.toFixed(1);
-        messagesBox.value += "\nMaslow_blY: " + bestGuess.bl.y.toFixed(1);
-        messagesBox.value += "\nMaslow_brX: " + bestGuess.br.x.toFixed(1);
-        messagesBox.value += "\nMaslow_brY: " + bestGuess.br.y.toFixed(1);
-        messagesBox.scrollTop;
-        messagesBox.scrollTop = messagesBox.scrollHeight;
-
+  messagesBox.value += "\nCalibration complete \nCalibration values:";
+  messagesBox.value += "\nFitness: " + 1 / bestGuess.fitness.toFixed(7);
+  messagesBox.value += "\nMaslow_tlX: " + bestGuess.tl.x.toFixed(1);
+  messagesBox.value += "\nMaslow_tlY: " + bestGuess.tl.y.toFixed(1);
+  messagesBox.value += "\nMaslow_trX: " + bestGuess.tr.x.toFixed(1);
+  messagesBox.value += "\nMaslow_trY: " + bestGuess.tr.y.toFixed(1);
+  messagesBox.value += "\nMaslow_blX: " + bestGuess.bl.x.toFixed(1);
+  messagesBox.value += "\nMaslow_blY: " + bestGuess.bl.y.toFixed(1);
+  messagesBox.value += "\nMaslow_brX: " + bestGuess.br.x.toFixed(1);
+  messagesBox.value += "\nMaslow_brY: " + bestGuess.br.y.toFixed(1);
+  messagesBox.scrollTop;
+  messagesBox.scrollTop = messagesBox.scrollHeight;
 }
 
 const messagesBox = document.getElementById("messages");
@@ -213,6 +211,7 @@ const fitnessMessage = document.getElementById("fitnessMessage");
  */
 function calibrationEventListener(event) {
   if (event.detail) {
+    console.log(event.detail);
     if (event.detail.initialGuess) {
       // start of calibration here.
       resetButtonsDisabled(true);
@@ -231,9 +230,11 @@ function calibrationEventListener(event) {
       const bestGuess = event.detail.bestGuess;
       const totalCounter = event.detail.bestGuess;
       if (totalCounter % 100 == 0) {
-        const fitnessStatus = `Fitness: ${1 / bestGuess.fitness.toFixed(7)} in ${totalCounter}`;
+        const fitnessStatus = `Fitness: ${
+          1 / bestGuess.fitness.toFixed(7)
+        } in ${totalCounter}`;
         fitnessMessage.innerText = fitnessStatus;
-        messagesBox.value += '\n' + fitnessStatus;
+        messagesBox.value += "\n" + fitnessStatus;
         messagesBox.scrollTop;
         messagesBox.scrollTop = messagesBox.scrollHeight;
       }
@@ -245,13 +246,26 @@ function calibrationEventListener(event) {
       const lines = event.detail.lines.lines;
       const individual = event.detail.individual;
       const measurement = event.detail.measurement;
-      drawLines(lines.tlLine, lines.trLine, lines.blLine, lines.brLine, individual, measurement);
+      drawLines(
+        lines.tlLine,
+        lines.trLine,
+        lines.blLine,
+        lines.brLine,
+        individual,
+        measurement
+      );
     }
   }
 }
 
-document.body.removeEventListener(CALIBRATION_EVENT_NAME, calibrationEventListener)
-document.body.addEventListener(CALIBRATION_EVENT_NAME, calibrationEventListener)
+document.body.removeEventListener(
+  CALIBRATION_EVENT_NAME,
+  calibrationEventListener
+);
+document.body.addEventListener(
+  CALIBRATION_EVENT_NAME,
+  calibrationEventListener
+);
 
 // functions removed from this project
 
