@@ -46,25 +46,6 @@ function updateCalibrationSave(caldata) {
   computeLinesFitness(SavedMeasurements, BestGuess);
 }
 
-const calibrationCallback = (e) => {
-  if (e.detail.started) {
-    // todo: anything?
-  } else if (e.detail.progress) {
-    // update fields.
-    document.getElementById("tlx").value = e.detail.currentGuess.tl.x;
-    document.getElementById("tly").value = e.detail.currentGuess.tl.y;
-    document.getElementById("trx").value = e.detail.currentGuess.tr.x;
-    document.getElementById("try").value = e.detail.currentGuess.tr.y;
-    document.getElementById("brx").value = e.detail.currentGuess.br.x;
-  } else if (e.detail.complete) {
-    // update initial stuff.
-    initialGuess = { ...BestGuess };
-    initialDataChanged();
-    loadInitialData();
-  }
-  console.log(e.detail);
-};
-
 function computeSim(measurements = null) {
   resetButtonsDisabled(true);
   clearCalCanvas();
@@ -211,14 +192,17 @@ const fitnessMessage = document.getElementById("fitnessMessage");
  */
 function calibrationEventListener(event) {
   if (event.detail) {
-    console.log(event.detail);
     if (event.detail.initialGuess) {
       // start of calibration here.
+      messagesBox.value = ''
       resetButtonsDisabled(true);
       clearCalCanvas();
     } else if (event.detail.final) {
       resetButtonsDisabled(false);
       printGuess(messagesBox, BestGuess);
+      initialGuess = { ...BestGuess };
+        initialDataChanged();
+        loadInitialData();
       // end of calibration.
       if (event.detail.good) {
         // "good" calibration
@@ -239,6 +223,11 @@ function calibrationEventListener(event) {
         messagesBox.scrollTop = messagesBox.scrollHeight;
       }
       BestGuess = bestGuess;
+      document.getElementById("tlx").value = bestGuess.tl.x;
+      document.getElementById("tly").value = bestGuess.tl.y;
+      document.getElementById("trx").value = bestGuess.tr.x;
+      document.getElementById("try").value = bestGuess.tr.y;
+      document.getElementById("brx").value = bestGuess.br.x;
     } else if (event.detail.walkedLines) {
       // walkLines result
     } else if (event.detail.lines) {
@@ -271,4 +260,12 @@ document.body.addEventListener(
 
 function clearCanvas() {
   clearCalCanvas();
+}
+
+function sendCommand(anything) {
+  console.log("would have sent command ", anything);
+}
+
+function refreshSettings() {
+  console.log('refresh settings');
 }

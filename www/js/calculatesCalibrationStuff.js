@@ -286,23 +286,26 @@ function computeFurthestFromCenterOfMass(lines, lastGuess) {
 
   const maxError = Math.max(Math.abs(tlX), Math.abs(tlY), Math.abs(trX), Math.abs(trY), Math.abs(brX))
 
-  var divisor = -10
-  if (maxError == Math.abs(tlX)) {
-    //console.log("Move tlY by: " + tlY/divisor);
-    lastGuess.tl.x = lastGuess.tl.x + tlX / divisor
+  var scalor = -1;
+  if(maxError == Math.abs(tlX)){
+      //console.log("Move tlY by: " + tlY/divisor);
+      lastGuess.tl.x = lastGuess.tl.x + tlX*scalor;
   }
-  if (maxError == Math.abs(tlY)) {
-    //console.log("Move tlY by: " + tlY/divisor);
-    lastGuess.tl.y = lastGuess.tl.y + tlY / divisor
-  } else if (maxError == Math.abs(trX)) {
-    //console.log("Move trX by: " + trX/divisor);
-    lastGuess.tr.x = lastGuess.tr.x + trX / divisor
-  } else if (maxError == Math.abs(trY)) {
-    //console.log("Move trY by: " + trY/divisor);
-    lastGuess.tr.y = lastGuess.tr.y + trY / divisor
-  } else if (maxError == Math.abs(brX)) {
-    //console.log("Move brX by: " + brX/divisor);
-    lastGuess.br.x = lastGuess.br.x + brX / divisor
+  if(maxError == Math.abs(tlY)){
+      //console.log("Move tlY by: " + tlY/divisor);
+      lastGuess.tl.y = lastGuess.tl.y + tlY*scalor;
+  }
+  else if(maxError == Math.abs(trX)){
+      //console.log("Move trX by: " + trX/divisor);
+      lastGuess.tr.x = lastGuess.tr.x + trX*scalor;
+  }
+  else if(maxError == Math.abs(trY)){
+      //console.log("Move trY by: " + trY/divisor);
+      lastGuess.tr.y = lastGuess.tr.y + trY*scalor;
+  }
+  else if(maxError == Math.abs(brX)){
+      //console.log("Move brX by: " + brX/divisor);
+      lastGuess.br.x = lastGuess.br.x + brX*scalor;
   }
 
   return lastGuess
