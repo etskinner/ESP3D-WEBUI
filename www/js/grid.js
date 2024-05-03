@@ -73,11 +73,11 @@ function highlightLines() {
     // reset in a sec
     setTimeout(() => {
       // redraw
-      clearCalCanvas();
-      computeLinesFitness(SavedMeasurements, BestGuess); // redraw
+      // clearCalCanvas();
+      // computeLinesFitness(SavedMeasurements, BestGuess); // redraw
       // call me back in a second
       setTimeout(
-        () => requestAnimationFrame(lineAnimationLoop),
+        lineAnimationLoop,
         highlightTiming / 2
       );
     }, highlightTiming);

@@ -15,7 +15,7 @@ let result
  *
  *   If you are reading this code to understand it then I would recommend starting
  *  at the bottom of the page and working your way up. The code is written in a
- * functional st‰yle so the function definitions are at the top and the code that
+ * functional style so the function definitions are at the top and the code that
  * actually runs is at the bottom. It was also written quickly and modified a lot
  * so it is not very clean. I apologize for that.
  *
@@ -134,7 +134,13 @@ function walkLines(tlLine, trLine, blLine, brLine, stepSize) {
     brLine = lines[3]
   }
 
-  return { tlLine, trLine, blLine, brLine }
+  const result = { tlLine, trLine, blLine, brLine, changeMade }
+
+  sendCalibrationEvent({
+    walkedlines: result,
+  });
+
+  return result;
 }
 
 /**
@@ -206,9 +212,14 @@ function magneticallyAttractedLinesFitness(measurement, individual) {
   measurement.TLtension = TL
   measurement.TRtension = TR
 
-  drawLines(tlLine, trLine, blLine, brLine, individual, measurement);
+  const result ={ fitness: finalFitness, lines: { tlLine: tlLine, trLine: trLine, blLine: blLine, brLine: brLine } }
+  sendCalibrationEvent({
+    lines: result,
+    individual,
+    measurement
+  });
 
-  return { fitness: finalFitness, lines: { tlLine: tlLine, trLine: trLine, blLine: blLine, brLine: brLine } }
+  return result;
 }
 
 /**
@@ -275,23 +286,26 @@ function computeFurthestFromCenterOfMass(lines, lastGuess) {
 
   const maxError = Math.max(Math.abs(tlX), Math.abs(tlY), Math.abs(trX), Math.abs(trY), Math.abs(brX))
 
-  var divisor = -10
-  if (maxError == Math.abs(tlX)) {
-    //console.log("Move tlY by: " + tlY/divisor);
-    lastGuess.tl.x = lastGuess.tl.x + tlX / divisor
+  var scalor = -1;
+  if(maxError == Math.abs(tlX)){
+      //console.log("Move tlY by: " + tlY/divisor);
+      lastGuess.tl.x = lastGuess.tl.x + tlX*scalor;
   }
-  if (maxError == Math.abs(tlY)) {
-    //console.log("Move tlY by: " + tlY/divisor);
-    lastGuess.tl.y = lastGuess.tl.y + tlY / divisor
-  } else if (maxError == Math.abs(trX)) {
-    //console.log("Move trX by: " + trX/divisor);
-    lastGuess.tr.x = lastGuess.tr.x + trX / divisor
-  } else if (maxError == Math.abs(trY)) {
-    //console.log("Move trY by: " + trY/divisor);
-    lastGuess.tr.y = lastGuess.tr.y + trY / divisor
-  } else if (maxError == Math.abs(brX)) {
-    //console.log("Move brX by: " + brX/divisor);
-    lastGuess.br.x = lastGuess.br.x + brX / divisor
+  if(maxError == Math.abs(tlY)){
+      //console.log("Move tlY by: " + tlY/divisor);
+      lastGuess.tl.y = lastGuess.tl.y + tlY*scalor;
+  }
+  else if(maxError == Math.abs(trX)){
+      //console.log("Move trX by: " + trX/divisor);
+      lastGuess.tr.x = lastGuess.tr.x + trX*scalor;
+  }
+  else if(maxError == Math.abs(trY)){
+      //console.log("Move trY by: " + trY/divisor);
+      lastGuess.tr.y = lastGuess.tr.y + trY*scalor;
+  }
+  else if(maxError == Math.abs(brX)){
+      //console.log("Move brX by: " + brX/divisor);
+      lastGuess.br.x = lastGuess.br.x + brX*scalor;
   }
 
   return lastGuess
@@ -486,110 +500,104 @@ function scaleMeasurementsBasedOnTension(measurements, guess) {
   return newMeasurements
 }
 
+
 function findMaxFitness(measurements) {
-  // reject if already running
-  if (window.computing) {
-    console.log('Computation in progress, ignoring request');
-    return;
-  }
-  document.getElementById("caltable").dispatchEvent(new CustomEvent(CALIBRATION_EVENT, {
-    bubbles: true,
-    cancelable: true,
-    detail: {
-      started: true,
-    }
-  }));
-  // turn off compute button
-  window.computing = true;
+
+  sendCalibrationEvent({
+    initialGuess
+  }, true);
 
   let currentGuess = JSON.parse(JSON.stringify(initialGuess));
   let stagnantCounter = 0;
   let totalCounter = 0;
   var bestGuess = JSON.parse(JSON.stringify(initialGuess));
 
-  var messagesBox = document.querySelector("#messages");
-  const fitnessMessage = document.getElementById("fitnessMessage");
-
   function iterate() {
-    if (!window.computing) {
-      printGuess(messagesBox, bestGuess);
-      return;
-    }
-    if (stagnantCounter < 300 && totalCounter < 200000) {
-      //Clear the canvass
-      clearCalCanvas();
+      if (stagnantCounter < 1000 && totalCounter < 200000) {
+          //Clear the canvass
+          clearCanvas();
 
-      currentGuess = computeLinesFitness(measurements, currentGuess);
+          currentGuess = computeLinesFitness(measurements, currentGuess);
 
-      document.getElementById("caltable").dispatchEvent(new CustomEvent(CALIBRATION_EVENT, {
-        bubbles: true,
-        cancelable: true,
-        detail: {
-          progress: true,
-          currentGuess: currentGuess
-        }
-      }));
+          if (1/currentGuess.fitness > 1/bestGuess.fitness) {
+              bestGuess = JSON.parse(JSON.stringify(currentGuess));
+              stagnantCounter = 0;
+          } else {
+              stagnantCounter++;
+          }
+          totalCounter++;
+          // console.log("Total Counter: " + totalCounter);
+          sendCalibrationEvent({
+            final: false,
+            guess: currentGuess,
+            bestGuess: bestGuess,
+            totalCounter
+          });
 
-      if (1/currentGuess.fitness > 1/bestGuess.fitness) {
-          bestGuess = JSON.parse(JSON.stringify(currentGuess));
-          BestGuess = bestGuess;
-          stagnantCounter = 0;
-      } else {
-          stagnantCounter++;
+          if(totalCounter % 100 == 0){
+                document.getElementById('messages').textContent += "Fitness: " + (1/bestGuess.fitness).toFixed(7) + " in " + totalCounter + "\n";
+                document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+          }
+
+          // Schedule the next iteration
+          setTimeout(iterate, 0);
       }
-      totalCounter++;
-      //console.log("Total Counter: " + totalCounter);
+      else{
+        var messagesBox = document.getElementById('messages')
 
-      if(totalCounter % 100 == 0) {
-        const fitnessStatus = `Fitness: ${1 / bestGuess.fitness.toFixed(7)} in ${totalCounter}`;
-        fitnessMessage.innerText = fitnessStatus;
-        messagesBox.value += '\n' + fitnessStatus;
-        messagesBox.scrollTop;
-        messagesBox.scrollTop = messagesBox.scrollHeight;
+          if(1/bestGuess.fitness < 0.5){
+              messagesBox.value += '\nWARNING FITNESS TOO LOW. DO NOT USE THESE CALIBRATION VALUES!';
+          }
+
+          messagesBox.textContent += '\nCalibration complete \nCalibration values:';
+          messagesBox.textContent += '\nFitness: ' + 1/bestGuess.fitness.toFixed(7);
+          messagesBox.textContent += '\nMaslow_tlX: ' + bestGuess.tl.x.toFixed(1);
+          messagesBox.textContent += '\nMaslow_tlY: ' + bestGuess.tl.y.toFixed(1);
+          messagesBox.textContent += '\nMaslow_trX: ' + bestGuess.tr.x.toFixed(1);
+          messagesBox.textContent += '\nMaslow_trY: ' + bestGuess.tr.y.toFixed(1);
+          messagesBox.textContent += '\nMaslow_blX: ' + bestGuess.bl.x.toFixed(1);
+          messagesBox.textContent += '\nMaslow_blY: ' + bestGuess.bl.y.toFixed(1);
+          messagesBox.textContent += '\nMaslow_brX: ' + bestGuess.br.x.toFixed(1);
+          messagesBox.textContent += '\nMaslow_brY: ' + bestGuess.br.y.toFixed(1);
+          messagesBox.scrollTop
+          messagesBox.scrollTop = messagesBox.scrollHeight;
+
+          if(1/bestGuess.fitness > 0.5){
+              sendCommand('$/Maslow_tlX=' + bestGuess.tl.x.toFixed(1));
+              sendCommand('$/Maslow_tlY=' + bestGuess.tl.y.toFixed(1));
+              sendCommand('$/Maslow_trX=' + bestGuess.tr.x.toFixed(1));
+              sendCommand('$/Maslow_trY=' + bestGuess.tr.y.toFixed(1));
+              sendCommand('$/Maslow_blX=' + bestGuess.bl.x.toFixed(1));
+              sendCommand('$/Maslow_blY=' + bestGuess.bl.y.toFixed(1));
+              sendCommand('$/Maslow_brX=' + bestGuess.br.x.toFixed(1));
+              sendCommand('$/Maslow_brY=' + bestGuess.br.y.toFixed(1));
+              sendCalibrationEvent({
+                good: true,
+                final: true,
+                bestGuess: bestGuess
+              }, true);
+              refreshSettings(current_setting_filter);
+              saveMaslowYaml();
+
+              messagesBox.textContent += '\nThese values have been automatically saved for you.';
+              messagesBox.scrollTop
+              messagesBox.scrollTop = messagesBox.scrollHeight;
+
+              initialGuess = bestGuess;
+              initialGuess.fitness = 100000000;
+
+              // This restarts calibration process for the next stage
+              setTimeout(function() {
+                onCalibrationButtonsClick('$CAL','Calibrate')
+              }, 2000);
+          } else {
+              sendCalibrationEvent({
+                good: false,
+                final: true,
+                guess: bestGuess
+              }, true);
+          }
       }
-
-      // Schedule the next iteration
-      setTimeout(iterate, 0);
-    } else {
-      document.getElementById("caltable").dispatchEvent(new CustomEvent(CALIBRATION_EVENT, {
-        bubbles: true,
-        cancelable: true,
-        detail: {
-          complete: true,
-          bestGuess: bestGuess
-        }
-      }));
-
-      // allow compute button to be pressed again
-      window.computing = false;
-      resetButtonsDisabled(false);
-      printGuess(messagesBox, bestGuess);
-
-      if (1 / bestGuess.fitness > 0.5) {
-        sendCommand("$/Maslow_tlX=" + bestGuess.tl.x.toFixed(1));
-        sendCommand("$/Maslow_tlY=" + bestGuess.tl.y.toFixed(1));
-        sendCommand("$/Maslow_trX=" + bestGuess.tr.x.toFixed(1));
-        sendCommand("$/Maslow_trY=" + bestGuess.tr.y.toFixed(1));
-        sendCommand("$/Maslow_blX=" + bestGuess.bl.x.toFixed(1));
-        sendCommand("$/Maslow_blY=" + bestGuess.bl.y.toFixed(1));
-        sendCommand("$/Maslow_brX=" + bestGuess.br.x.toFixed(1));
-        sendCommand("$/Maslow_brY=" + bestGuess.br.y.toFixed(1));
-        refreshSettings(current_setting_filter);
-        saveMaslowYaml();
-
-        messagesBox.value +=
-          "\nThese values have been automatically saved for you.";
-        messagesBox.value +=
-          "\nYou MUST restart your machine for them to take effect...I know that is annoying, it's getting fixed ASAP. ";
-        messagesBox.scrollTop;
-        messagesBox.scrollTop = messagesBox.scrollHeight;
-
-        // This restarts the esp32 to prevent you from trying to move the machine after calibration
-        setTimeout(function () {
-          sendCommand("$System/Control=RESTART");
-        }, 2000);
-      }
-    }
   }
 
   // Start the iteration
@@ -597,7 +605,27 @@ function findMaxFitness(measurements) {
 }
 
 
-
+/**
+ * This function will allow us to hook data into events that we can just copy this file into another project
+ * to have the calibration run in other contexts and still gather events from the calculations to plot things, gather data, etc.
+ */
+function sendCalibrationEvent(dataToSend, log=false) {
+  try{
+    if (log) {
+      console.log(JSON.stringify(dataToSend,null,2));
+    } else if(dataToSend.totalCounter) {
+      console.log("total counter:", dataToSend.totalCounter);
+    }
+    document.body.dispatchEvent(new CustomEvent(CALIBRATION_EVENT_NAME, {
+      bubbles: true,
+      cancelable: true,
+      detail: dataToSend
+    }));
+  } catch (err) {
+    console.error('Unexpected:', err)
+  }
+}
+const CALIBRATION_EVENT_NAME = 'calibration-data';
 //This is where the program really begins. The above is all function definitions
 //The way that the progam works is that we basically guess where the four corners are and then
 //check to see how good that guess was. To see how good a guess was we "draw" circles from the four corner points
@@ -606,43 +634,6 @@ function findMaxFitness(measurements) {
 
 //Once we've figured out how good our guess was we try a different guess. We keep the good guesses and throw away the bad guesses
 //using a genetic algorithm
-function printGuess(messagesBox, bestGuess) {
-        if (1 / bestGuess.fitness < 0.5) {
-          messagesBox.value +=
-            "\nWARNING FITNESS TOO LOW. DO NOT USE THESE CALIBRATION VALUES!";
-        }
 
-        messagesBox.value += "\nCalibration complete \nCalibration values:";
-        messagesBox.value += "\nFitness: " + 1 / bestGuess.fitness.toFixed(7);
-        messagesBox.value += "\nMaslow_tlX: " + bestGuess.tl.x.toFixed(1);
-        messagesBox.value += "\nMaslow_tlY: " + bestGuess.tl.y.toFixed(1);
-        messagesBox.value += "\nMaslow_trX: " + bestGuess.tr.x.toFixed(1);
-        messagesBox.value += "\nMaslow_trY: " + bestGuess.tr.y.toFixed(1);
-        messagesBox.value += "\nMaslow_blX: " + bestGuess.bl.x.toFixed(1);
-        messagesBox.value += "\nMaslow_blY: " + bestGuess.bl.y.toFixed(1);
-        messagesBox.value += "\nMaslow_brX: " + bestGuess.br.x.toFixed(1);
-        messagesBox.value += "\nMaslow_brY: " + bestGuess.br.y.toFixed(1);
-        messagesBox.scrollTop;
-        messagesBox.scrollTop = messagesBox.scrollHeight;
-
-}
-
-const CALIBRATION_EVENT = 'calibration';
-
-const CAL_STARTED_EVENT = new CustomEvent(CALIBRATION_EVENT,
-{bubbles: true, cancelable: true, detail: {
-  complete: true
-}});
-
-const CAL_DONE_EVENT = new CustomEvent(CALIBRATION_EVENT,
-{bubbles: true, cancelable: true, detail: {
-  started: true
-}});
-
-const CAL_PROGRESS_EVENT = new CustomEvent(CALIBRATION_EVENT,
-{bubbles: true, cancelable: true, detail: {
-  iteration: 0,
-  bestGuess: {}
-}});
 
 
